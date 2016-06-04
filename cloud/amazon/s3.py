@@ -113,9 +113,9 @@ options:
     version_added: "2.0"
   overwrite:
     description:
-      - Force overwrite either locally on the filesystem or remotely with the object/key. Used with PUT and GET operations. Boolean or one of [Always, Never, Different], new in 2.0
+      - Force overwrite either locally on the filesystem or remotely with the object/key. Used with PUT and GET operations. Boolean or one of [always, never, different], true is equal to 'always' and false is equal to 'never', new in 2.0
     required: false
-    default: true
+    default: 'always'
     version_added: "1.2"
   region:
     description:
@@ -460,9 +460,10 @@ def main():
             s3 = boto.connect_walrus(walrus, **aws_connect_kwargs)
         else:
             aws_connect_kwargs['is_secure'] = True
-            s3 = connect_to_aws(boto.s3, location, **aws_connect_kwargs)
-            # use this as fallback because connect_to_region seems to fail in boto + non 'classic' aws accounts in some cases
-            if s3 is None:
+            try:
+                s3 = connect_to_aws(boto.s3, location, **aws_connect_kwargs)
+            except AnsibleAWSError:
+                # use this as fallback because connect_to_region seems to fail in boto + non 'classic' aws accounts in some cases
                 s3 = boto.connect_s3(**aws_connect_kwargs)
 
     except boto.exception.NoAuthHandlerFound, e:
